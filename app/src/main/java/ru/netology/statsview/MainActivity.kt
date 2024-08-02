@@ -8,12 +8,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
         findViewById<StatsView>(R.id.statsView).data = listOf(
             500f,
-            150f,
-            250f,
-            100f,
-            300f
+            500f,
+            500f,
+            500f
         )
+
     }
 }
