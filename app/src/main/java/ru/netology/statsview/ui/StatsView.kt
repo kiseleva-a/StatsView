@@ -60,6 +60,12 @@ class StatsView @JvmOverloads constructor(
         strokeCap = Paint.Cap.ROUND
     }
 
+    private val dotPaint = Paint(
+        Paint.ANTI_ALIAS_FLAG
+    ).apply {
+        style = Paint.Style.FILL
+    }
+
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
@@ -85,15 +91,20 @@ class StatsView @JvmOverloads constructor(
         }
 
         var startAngle = -90F
+        val fullData = data.sum()
         data.forEachIndexed { index, datum ->
-            val angle = datum * 360
+            val percent = datum/fullData
+            val angle = percent * 360
             paint.color = colors.getOrElse(index){ generateRandomColor()}
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
 
+        dotPaint.color = colors[0]
+        canvas.drawCircle(center.x,center.y-radius,lineWidth/2f,dotPaint)
+
         canvas.drawText(
-            "%.2f%%".format(data.sum() * 100),
+            "%.2f%%".format(100f),
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
