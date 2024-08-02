@@ -1,5 +1,6 @@
 package ru.netology.statsview.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -7,6 +8,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.LinearInterpolator
 import androidx.core.content.withStyledAttributes
 import ru.netology.statsview.R
 import ru.netology.statsview.utils.AndroidUtils
@@ -43,11 +45,37 @@ class StatsView @JvmOverloads constructor(
 
     }
 
+    private var progress = 0f
+    private var rotationProgress = 0f
+    private var valueAnimator: ValueAnimator? = null
+
     var data: List<Float> = emptyList()
         set(value) {
             field = value
-            invalidate()
+            update()
         }
+
+    private fun update() {
+        valueAnimator?.let {
+            it.removeAllListeners()
+            it.cancel()
+        }
+        progress = 0f
+
+        valueAnimator = ValueAnimator.ofFloat(0f,1f).apply {
+            addUpdateListener { anim ->
+                progress = anim.animatedValue as Float
+                rotationProgress = progress*360
+                invalidate()
+            }
+            duration = 1500
+            startDelay = 500
+            interpolator = LinearInterpolator()
+        }.also {
+            it.start()
+        }
+    }
+
     private var radius = 0F
     private var center = PointF()
     private var oval = RectF()
@@ -59,6 +87,12 @@ class StatsView @JvmOverloads constructor(
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
+
+//    private val dotPaint = Paint(
+//        Paint.ANTI_ALIAS_FLAG
+//    ).apply {
+//        style = Paint.Style.FILL
+//    }
 
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
@@ -85,15 +119,20 @@ class StatsView @JvmOverloads constructor(
         }
 
         var startAngle = -90F
+        val fullData = data.sum()
         data.forEachIndexed { index, datum ->
-            val angle = datum * 360
+            val percent = datum/fullData
+            val angle = percent * 360
             paint.color = colors.getOrElse(index){ generateRandomColor()}
-            canvas.drawArc(oval, startAngle, angle, false, paint)
+            canvas.drawArc(oval, startAngle+rotationProgress, angle*progress, false, paint)
             startAngle += angle
         }
 
+        paint.color = colors[0]
+        canvas.drawArc(oval,-90f+rotationProgress,progress,false,paint)
+
         canvas.drawText(
-            "%.2f%%".format(data.sum() * 100),
+            "%.2f%%".format(100f),
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
